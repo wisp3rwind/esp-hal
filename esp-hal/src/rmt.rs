@@ -2060,9 +2060,9 @@ impl DynChannelAccess<Tx> {
         #[cfg(rmt_has_tx_loop_count)]
         self.set_generate_repeat_interrupt(loopmode);
         self.set_tx_wrap_mode(loopmode.is_none());
-        self.update();
+        // self.update();
         self.start_tx();
-        self.update();
+        // self.update();
     }
 
     #[inline]
@@ -2086,11 +2086,11 @@ impl DynChannelAccess<Rx> {
         {
             self.set_rx_threshold((_memsize.codes() / 2) as u16);
             self.set_rx_wrap_mode(_wrap);
-            self.update();
+            // self.update();
         }
 
         self.start_rx();
-        self.update();
+        // self.update();
     }
 
     #[inline]
@@ -2429,7 +2429,12 @@ mod chip_specific {
 
             rmt.ch_tx_conf0(self.channel().into()).modify(|_, w| {
                 w.mem_rd_rst().set_bit();
-                w.apb_mem_rst().set_bit();
+                w.apb_mem_rst().set_bit()
+            });
+            self.update();
+            self.clear_tx_interrupts();
+            crate::rom::ets_delay_us(4);
+            rmt.ch_tx_conf0(self.channel().into()).modify(|_, w| {
                 w.tx_start().set_bit()
             });
         }
@@ -2572,9 +2577,14 @@ mod chip_specific {
             rmt.ch_rx_conf1(ch_idx.into()).modify(|_, w| {
                 w.mem_owner().set_bit();
                 w.mem_wr_rst().set_bit();
-                w.apb_mem_rst().set_bit();
+                w.apb_mem_rst().set_bit()
+            });
+            self.update();
+            crate::rom::ets_delay_us(4);
+            rmt.ch_rx_conf1(ch_idx.into()).modify(|_, w| {
                 w.rx_en().set_bit()
             });
+            self.update();
         }
 
         // Return the first flag that is set of, in order of decreasing priority,

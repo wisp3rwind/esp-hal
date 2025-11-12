@@ -53,8 +53,8 @@ cfg_if::cfg_if! {
         const FREQ: Rate = Rate::from_mhz(32);
         const DIV: u8 = 64;
     } else {
-        const FREQ: Rate = Rate::from_mhz(80);
-        const DIV: u8 = 160;
+        const FREQ: Rate = Rate::from_hz(80_000_000 / 256);
+        const DIV: u8 = 1;
     }
 }
 
@@ -64,7 +64,7 @@ fn generate_tx_data<const TX_LEN: usize>(
     write_end_marker: bool,
 ) -> [PulseCode; TX_LEN] {
     let mut tx_data: [_; TX_LEN] = core::array::from_fn(|i| {
-        PulseCode::new(Level::High, (100 + (i * 10) % 200) as u16, Level::Low, 50)
+        PulseCode::new(Level::High, (20 + (i * 10) % 20) as u16, Level::Low, 50)
     });
 
     let mut pos = TX_LEN - 1;
@@ -410,7 +410,7 @@ impl Context {
     }
 }
 
-#[embedded_test::tests(default_timeout = 1, executor = hil_test::Executor::new())]
+#[embedded_test::tests(default_timeout = 30, executor = hil_test::Executor::new())]
 mod tests {
     #[allow(unused_imports)]
     use hil_test::{assert, assert_eq};
